@@ -1,0 +1,52 @@
+FROM opensuse/leap:16.0
+
+ENV version=v1
+
+ARG bashrc=https://raw.githubusercontent.com/analogdevicesinc/doctools/refs/heads/ci/bashrc
+ARG entrypoint_sh=https://raw.githubusercontent.com/analogdevicesinc/doctools/refs/heads/ci/entrypoint.sh
+ARG git_defaults_sh=https://raw.githubusercontent.com/analogdevicesinc/doctools/refs/heads/ci/git-defaults.sh
+ARG gh_actions_runner_sh=https://raw.githubusercontent.com/analogdevicesinc/doctools/refs/heads/ci/gh-actions-runner.sh
+
+RUN zypper update -y
+RUN zypper install -y --no-recommends \
+    tar unzip gzip curl jq libicu coreutils
+
+RUN useradd -m runner
+WORKDIR /home/runner
+
+ADD ${gh_actions_runner_sh} .
+RUN bash ./gh-actions-runner.sh ; rm ./gh-actions-runner.sh
+
+RUN zypper install -y --no-recommends \
+    python3 python3-pip python3-devel \
+    gcc gcc-c++ make \
+    git openssh-clients rsync curl wget \
+    which file tar gzip unzip \
+    libgpiod libgpiod-devel \
+    openocd \
+    screen picocom \
+    iproute2 iputils netcat-openbsd \
+    udev
+
+RUN python3 -m pip install --no-cache-dir --break-system-packages \
+    pytest \
+    pytest-html \
+    pytest-timeout \
+    pexpect \
+
+RUN mkdir -p /usr/local/bin
+WORKDIR /usr/local/bin
+ADD ${entrypoint_sh} .
+RUN chmod +rx ./entrypoint.sh
+
+ADD ${git_defaults_sh} .
+RUN bash ./git-defaults.sh ; rm ./git-defaults.sh
+
+# plus the ssh credientials needed.
+
+USER runner
+WORKDIR /home/runner
+RUN curl -o .bashrc -L ${bashrc} ; \
+    chmod +x .bashrc
+
+ENTRYPOINT ["/bin/bash"]

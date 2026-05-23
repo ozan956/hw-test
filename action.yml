@@ -1,0 +1,69 @@
+name: "Labgrid Hardware Tests"
+description: "Run Labgrid pytest tests inside prebuilt CI container"
+
+inputs:
+  test-selector:
+    required: false
+    default: "tests/u_boot.py"
+
+  labgrid-targets:
+    required: true
+
+  labgrid-env:
+    required: false
+    default: "envs/adsp.yaml"
+
+  artifact-dir:
+    required: false
+    default: "output/images"
+
+  u-boot-spl:
+    required: false
+    default: "u-boot-spl"
+
+  u-boot:
+    required: false
+    default: "u-boot"
+
+  Image:
+    required: false
+    default: "Image"
+
+  dtb:
+    required: false
+    default: ""
+
+  container-image:
+    required: false
+    default: "hw-test:latest"
+
+  labgrid-ref:
+    required: false
+    default: "master"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install latest Labgrid
+      shell: bash
+      run: |
+        python3 -m pip install --user --upgrade \
+          "labgrid @ git+https://github.com/labgrid-project/labgrid.git@${{ inputs.labgrid-ref }}"
+
+    - name: Run Labgrid hardware tests
+      shell: bash
+      run: |
+        COORDINATOR="${{ inputs.labgrid-coordinator }}"
+        if [ -z "$COORDINATOR" ]; then
+          COORDINATOR="${LABGRID_COORDINATOR}"
+        fi
+
+        LG_TARGETS="${{ inputs.labgrid-targets }}" \
+        UBOOT_SPL="$GITHUB_WORKSPACE/${{ inputs.artifact-dir }}/${{ inputs.u-boot-spl }}" \
+        UBOOT="$GITHUB_WORKSPACE/${{ inputs.artifact-dir }}/${{ inputs.u-boot }}" \
+        KERNEL_IMAGE="$GITHUB_WORKSPACE/${{ inputs.artifact-dir }}/${{ inputs.Image }}" \
+        DEVICETREE="$GITHUB_WORKSPACE/${{ inputs.artifact-dir }}/${{ inputs.dtb }}" \
+        pytest -v \
+          --lg-env "$GITHUB_ACTION_PATH/${{ inputs.labgrid-env }}" \
+          --lg-coordinator "$COORDINATOR" \
+          "$GITHUB_ACTION_PATH/${{ inputs.test-selector }}"
