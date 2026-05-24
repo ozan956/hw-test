@@ -1,5 +1,4 @@
 name: "Labgrid Hardware Tests"
-description: "Run Labgrid pytest tests inside prebuilt CI container"
 
 inputs:
   test-selector:
@@ -44,7 +43,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install latest Labgrid
+    - name: Install latest Labgrid into the runner
       shell: bash
       run: |
         python3 -m pip install --user --upgrade \
