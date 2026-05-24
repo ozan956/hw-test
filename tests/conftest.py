@@ -3,16 +3,24 @@ import pytest
 
 from labgrid import Environment
 
+from .reporting import get_reporter
+
 
 @pytest.fixture
 def labgrid_target(pytestconfig):
+    reporter = get_reporter()
     config_file = pytestconfig.getoption("lg_env") or os.environ.get("LG_ENV")
     assert config_file, "missing Labgrid environment config"
 
     target_names = os.environ.get("LG_TARGETS", "").split()
     assert target_names, "missing LG_TARGETS"
 
-    env = Environment(config_file)
+    try:
+        env = Environment(config_file)
+    except Exception as exc:
+        reporter.fail_stage("labgrid_accessible", str(exc))
+        raise
+    reporter.pass_stage("labgrid_accessible", f"Loaded environment from {config_file}")
 
     coordinator = pytestconfig.getoption("lg_coordinator")
     if coordinator:
@@ -30,12 +38,17 @@ def labgrid_target(pytestconfig):
                 target.acquire()
                 selected = target
                 acquired_by_test = True
-                print(f"Acquired Labgrid target: {target_name}")
+                reporter.pass_stage("target_acquired", f"Acquired target {target_name}")
                 break
 
             except Exception as exc:
-                print(f"Could not acquire {target_name}: {exc}")
+                reporter.note(f"Could not acquire {target_name}: {exc}")
 
+        if selected is None:
+            reporter.fail_stage(
+                "target_acquired",
+                f"Could not acquire any target from: {target_names}",
+            )
         assert selected is not None, f"Could not acquire any target from: {target_names}"
 
         yield selected
