@@ -18,7 +18,6 @@ def linux_boot(labgrid_target):
     kernel = artifact_path("KERNEL_IMAGE")
     devicetree = artifact_path("DEVICETREE")
 
-    server_port = 8000
     boot_command = "booti ${kernel_addr_r} - ${fdt_addr_r}"
     boot_banner_patterns = [
         "======== Installer Environment ========",
@@ -46,15 +45,11 @@ def linux_boot(labgrid_target):
                 kernel: kernel.name,
                 devicetree: devicetree.name,
             },
-            server_port,
+            80,
         )
 
-        run_uboot_command(console, "setenv autoload no")
         dhcp_output = run_uboot_command(console, "dhcp", timeout=60)
         assert "DHCP" in dhcp_output or "bound to address" in dhcp_output, dhcp_output
-
-        if server_port != 80:
-            run_uboot_command(console, f"setenv httpdstp {server_port}")
 
         kernel_output = run_uboot_command(
             console,
