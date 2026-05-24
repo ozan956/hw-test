@@ -27,7 +27,6 @@ def linux_boot(labgrid_target):
     continue_prompt = "Continue? [y/N]:"
     flash_success_patterns = [
         "SPI install complete",
-        "",
         "Set the switch S1 to position 1 (SPI boot).",
         "Waiting for switch...",
     ]
