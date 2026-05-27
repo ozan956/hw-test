@@ -2,6 +2,8 @@ FROM opensuse/leap:16.0
 
 ENV version=v1
 
+# Runner image for executing the shared hw-test action on lab-accessible hosts.
+
 ARG bashrc=https://raw.githubusercontent.com/analogdevicesinc/doctools/refs/heads/ci/bashrc
 ARG entrypoint_sh=https://raw.githubusercontent.com/analogdevicesinc/doctools/refs/heads/ci/entrypoint.sh
 ARG git_defaults_sh=https://raw.githubusercontent.com/analogdevicesinc/doctools/refs/heads/ci/git-defaults.sh
@@ -32,7 +34,7 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages \
     pytest \
     pytest-html \
     pytest-timeout \
-    pexpect \
+    pexpect
 
 RUN mkdir -p /usr/local/bin
 WORKDIR /usr/local/bin
@@ -42,7 +44,7 @@ RUN chmod +rx ./entrypoint.sh
 ADD ${git_defaults_sh} .
 RUN bash ./git-defaults.sh ; rm ./git-defaults.sh
 
-# plus the ssh credientials needed.
+# Host-specific SSH credentials still need to be provisioned separately.
 
 USER runner
 WORKDIR /home/runner

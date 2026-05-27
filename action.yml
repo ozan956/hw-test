@@ -36,9 +36,9 @@ inputs:
     required: false
     default: "hw-test:latest"
 
-  labgrid-ref:
+  labgrid-coordinator:
     required: false
-    default: "master"
+    default: ""
 
 runs:
   using: "composite"
@@ -47,7 +47,7 @@ runs:
       shell: bash
       run: |
         python3 -m pip install --user --upgrade \
-          "labgrid @ git+https://github.com/labgrid-project/labgrid.git@${{ inputs.labgrid-ref }}"
+          "labgrid @ git+https://github.com/labgrid-project/labgrid.git@master"
 
     - name: Run Labgrid hardware tests
       shell: bash
